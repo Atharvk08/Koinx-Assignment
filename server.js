@@ -72,9 +72,30 @@ async function fetchCryptoData() {
   }
 }
 
+// Schedule the function to run every 2 minutes
+// cron.schedule("*/2 * * * *", fetchCryptoData);
+
 app.get("/coin", (req, res) => {
   fetchCryptoData();
   res.send("successfully updated");
+});
+
+app.get("/stats", async (req, res) => {
+  const coin = req.query.coin;
+  if (!coin) {
+    return res.status(400).send({ error: "Coin parameter is required" });
+  }
+
+  const data = await Crypto.findOne({ coin }).sort({ timestamp: -1 });
+  //   .sort({ timestamp: -1 });
+  const cryptoData = data.timestamp[data.timestamp.length - 1];
+  console.log(cryptoData);
+
+  res.send({
+    price: cryptoData.price,
+    marketCap: cryptoData.marketCap,
+    "24hChange": cryptoData.change24h,
+  });
 });
 
 app.listen(3000, () => {
